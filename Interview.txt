@@ -1,0 +1,24 @@
+Consent: please confirm that your participation in this study is voluntary. 
+Your responses will be retained in a secure location and will only be used to 
+support the objectives of this study.
+You may revoke this permission at any time.
+
+Looking at the interface
+What features would support the goal of browsing course contents?
+What features would support the goal of finding specific information?
+
+Talk through running a search of your choosing.
+Talk through using the interface and opening course content.
+
+What lesson is "code1" in
+What lesson is "code2" in
+Find the tag related to the clue: to control subversively, gaslight, 
+Find the tag related to the clue: comparing lifecycles
+
+User sentiment questions:
+Do you think this is an improvement on the existing interface?
+Do you feel as though you are finding information, or dealing with interface idiosyncrasies
+What was you favorite part of the modified interface?
+What was your least favorite part of the modified interface?
+What ideas(if any) do you have for further interface improvements?
+
