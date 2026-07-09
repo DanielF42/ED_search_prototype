@@ -33,26 +33,38 @@ search_mode = "title"
 def node_matches(node, query, mode):
 
     # Only lesson nodes participate
-    if not node.get("children"):
-        return False
+    #if not node.get("children"):
+    #    return False
 
     return query.lower() in node.get("title", "").lower()
 
 
-def mark_matches(node, query, mode):
-    node["_match"] = False
-    node["_subtree_match"] = False
+def mark_matches(node, query, mode, depth=-1, force=False):
+    # depth=-1 because this is called on the invisible `course` root object;
+    # its direct children (course["children"]) are the true top-level nodes
+    # at depth 0, matching what render_tree()/render_node() treat as depth 0.
 
     if query == "":
         node["_match"] = False
         node["_subtree_match"] = True
-    else:
+        for child in node.get("children", []):
+            mark_matches(child, query, mode, depth + 1, force=False)
+        return
+
+    if force:
+        # an ancestor already matched: force this whole subtree to show/expand
+        node["_match"] = True
+    elif depth == 0:
+        # only top-level nodes are ever tested against the query directly
         node["_match"] = node_matches(node, query, mode)
+    else:
+        node["_match"] = False
+
+    child_force = force or node["_match"]
 
     subtree_match = node["_match"]
-
     for child in node.get("children", []):
-        mark_matches(child, query, mode)
+        mark_matches(child, query, mode, depth + 1, force=child_force)
         subtree_match = subtree_match or child["_subtree_match"]
 
     node["_subtree_match"] = subtree_match
@@ -103,7 +115,8 @@ def find_node(nodes, node_id):
 def toggle(nodes, node_id):
     for node in nodes:
         if node["id"] == node_id:
-            node["expanded"] = not node["expanded"]
+            node["expanded"] = not node.get("expanded", False)
+            node["_manual"] = True          # user explicitly set this
             return True
         if toggle(node.get("children", []), node_id):
             return True
@@ -131,10 +144,7 @@ def render_node(node, depth=0, query="", mode="title"):
     # -----------------------------
     # EXPANSION RULE (FIXED)
     # -----------------------------
-    if search_query:
-        expanded = node.get("_subtree_match", False)
-    else:
-        expanded = node.get("expanded", False)
+    expanded = node.get("expanded", False)
 
     has_children = bool(node.get("children"))
 
@@ -229,6 +239,12 @@ class Api:
     def set_search(self, query):
         global search_query
         search_query = query
+        # reset manual overrides so new search results auto-expand cleanly
+        def clear_manual(node):
+            node["_manual"] = False
+            for child in node.get("children", []):
+                clear_manual(child)
+        clear_manual(course)
         return render_tree()
 
     def set_search_mode(self, mode):
@@ -535,18 +551,6 @@ body {{
         <input class="search"
             placeholder="Search..."
             oninput="runSearch(this.value)">
-
-        <label style="margin-left:10px;">
-            <input type="radio" name="mode" value="title"
-                checked onchange="setMode(this.value)">
-            Title
-        </label>
-
-        <label style="margin-left:10px;">
-            <input type="radio" name="mode" value="transcript"
-                onchange="setMode(this.value)">
-            Transcript
-        </label>
 
     </div>
 
